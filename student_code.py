@@ -140,6 +140,74 @@ class KnowledgeBase(object):
         Returns:
             string explaining hierarchical support from other Facts and rules
         """
+
+        def toStr_Rule(rule):
+            res_str = ""
+            res_str += "rule: ("
+            list_size = len(rule.lhs)
+            for i in range(list_size-1):
+                res_str += rule.lhs[i].__str__()
+                res_str += ", "
+            res_str += rule.lhs[len(rule.lhs)-1].__str__()
+            res_str += ") -> "
+            res_str += rule.rhs.__str__()
+            if rule.asserted:
+                res_str += " ASSERTED"
+            res_str += "\n"
+            return res_str
+
+        def toStr_Fact(fact):
+            res_str = ""
+            res_str += "fact: "
+            res_str += fact.statement.__str__()
+            if fact.asserted:
+                res_str += " ASSERTED"
+            res_str += "\n"
+            return res_str
+
+        def indent_str(num):
+            res_str = ""
+            for i in range(num):
+                res_str += "  "
+            return res_str
+
+        def explain_str(fact_or_rule, res_str, indent_num):
+            if isinstance(fact_or_rule, Fact):
+                res_str += indent_str(indent_num)
+                res_str += toStr_Fact(fact_or_rule)
+            else:
+                res_str += indent_str(indent_num)
+                res_str += toStr_Rule(fact_or_rule)
+
+            # print("----len(supported_by)", len(fact_or_rule.supported_by))
+            if len(fact_or_rule.supported_by) is not 0:
+
+                indent_num += 1
+                for i in range(len(fact_or_rule.supported_by)):
+                    res_str += indent_str(indent_num)
+                    res_str += "SUPPORTED BY\n"
+
+                    res_str = explain_str(fact_or_rule.supported_by[i][0], res_str, (indent_num+1))
+                    res_str = explain_str(fact_or_rule.supported_by[i][1], res_str, (indent_num+1))
+
+            return res_str
+
+        if not isinstance(fact_or_rule, Fact) and not isinstance(fact_or_rule, Rule):
+            return False
+
+        res_str = ""
+        indent_num = 0
+        if isinstance(fact_or_rule, Fact):
+            if fact_or_rule not in self.facts:
+                return "Fact is not in the KB"
+            fact_or_rule = self._get_fact(fact_or_rule)
+        else:
+            if fact_or_rule not in self.rules:
+                return "Rule is not in the KB"
+            fact_or_rule = self._get_rule(fact_or_rule)
+
+        return explain_str(fact_or_rule, res_str, indent_num)
+
         ####################################################
         # Student code goes here
 
